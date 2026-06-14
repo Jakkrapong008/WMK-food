@@ -3,361 +3,652 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ระบบข้อมูลอาหารกลางวัน - โรงเรียนวัดแม่กะ</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <title>ระบบสารสนเทศข้อมูลอาหารกลางวัน โรงเรียนวัดแม่กะ</title>
+    
+    <!-- Google Fonts: Sarabun -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+
+    <!-- SweetAlert2 (สำหรับแจ้งเตือนแบบสวยงาม) -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <style>
-        body { font-family: 'Sarabun', sans-serif; background-color: #f0f4f8; }
-        .calendar-grid {
+        :root {
+            --primary-red: #d32f2f;
+            --primary-red-hover: #b71c1c;
+            --primary-yellow: #ffeb3b;
+            --bg-color: #f9f9f9;
+            --text-color: #333;
+        }
+
+        body {
+            font-family: 'Sarabun', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+        }
+
+        /* Navbar & Header */
+        .navbar-custom {
+            background-color: var(--primary-red);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            padding: 10px 0;
+        }
+        .navbar-brand {
+            color: white !important;
+            font-weight: 700;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .logo-img {
+            height: 60px;
+            width: auto;
+            background-color: white;
+            border-radius: 50%;
+            padding: 2px;
+        }
+
+        /* External Links */
+        .link-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 30px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        .btn-custom-yellow {
+            background-color: var(--primary-yellow);
+            color: #d32f2f;
+            font-weight: 600;
+            border: 2px solid #fbc02d;
+            border-radius: 25px;
+            padding: 10px 25px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .btn-custom-yellow:hover {
+            background-color: #fbc02d;
+            color: #b71c1c;
+            transform: translateY(-2px);
+        }
+
+        /* Calendar Card */
+        .calendar-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            padding: 20px;
+            margin-bottom: 40px;
+        }
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--primary-red);
+            padding-bottom: 10px;
+        }
+        .calendar-header h3 {
+            color: var(--primary-red);
+            font-weight: 700;
+            margin: 0;
+        }
+
+        /* Calendar Grid */
+        .cal-grid {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
             gap: 10px;
-            margin-top: 15px;
         }
-        .calendar-header { font-weight: bold; text-align: center; color: #495057; padding: 10px 0; }
-        .calendar-day {
-            border: 1px solid #e2e8f0;
+        .cal-header-cell {
+            text-align: center;
+            font-weight: 600;
+            color: white;
+            background-color: var(--primary-red);
+            padding: 10px 0;
             border-radius: 8px;
-            padding: 10px;
-            min-height: 110px;
-            background-color: #fff;
+            font-size: 0.9rem;
+        }
+        .cal-cell {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            min-height: 100px;
+            padding: 8px;
+            background-color: white;
+            cursor: pointer;
             transition: all 0.2s ease;
+            display: flex;
+            flex-direction: column;
             position: relative;
         }
-        .calendar-day.empty { background-color: transparent; border: none; }
-        .calendar-day.active { cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .calendar-day.active:hover { background-color: #eef2ff; border-color: #4f46e5; transform: translateY(-2px); }
-        .calendar-day.today { border: 2px solid #10b981; background-color: #f0fdf4; }
-        .date-num { font-size: 0.9rem; color: #64748b; font-weight: bold; }
-        .menu-title { font-weight: 600; color: #4f46e5; font-size: 0.95rem; margin-top: 5px; line-height: 1.3; }
-        .status-badge { position: absolute; bottom: 8px; right: 8px; font-size: 0.7rem; }
-        .overlay-loader {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(255,255,255,0.8); z-index: 1050;
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
+        .cal-cell:hover {
+            border-color: var(--primary-red);
+            box-shadow: 0 4px 8px rgba(211, 47, 47, 0.15);
+            transform: scale(1.02);
+            z-index: 2;
+        }
+        .cal-cell.weekend {
+            background-color: #f5f5f5;
+            color: #9e9e9e;
+            cursor: not-allowed;
+        }
+        .cal-cell.weekend:hover {
+            border-color: #e0e0e0;
+            box-shadow: none;
+            transform: none;
+        }
+        .cal-cell.empty {
+            background-color: transparent;
+            border: none;
+            cursor: default;
+        }
+        .cal-cell.empty:hover {
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* Cell Content */
+        .date-num {
+            font-weight: 700;
+            font-size: 1.1rem;
+            margin-bottom: 5px;
+        }
+        .menu-name {
+            font-size: 0.85rem;
+            color: #555;
+            flex-grow: 1;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .badge-status {
+            font-size: 0.7rem;
+            padding: 4px 8px;
+            border-radius: 12px;
+            align-self: flex-start;
+            margin-top: 5px;
+        }
+        .badge-has-img { background-color: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9;}
+        .badge-no-img { background-color: #ffebee; color: #c62828; border: 1px solid #ffcdd2;}
+
+        /* Modal Image */
+        .food-image-preview {
+            width: 100%;
+            max-height: 350px;
+            object-fit: contain; /* เปลี่ยนจาก cover เป็น contain เพื่อให้ภาพแสดงครบถ้วน ไม่ถูกตัดขอบ */
+            background-color: #f0f0f0; /* สีพื้นหลังในกรณีที่ภาพเป็นแนวตั้งหรือสัดส่วนไม่พอดี */
+            border-radius: 10px;
+            border: 2px solid #eee;
+            margin-bottom: 15px;
+            display: none;
+        }
+        .admin-section {
+            background-color: #fff8e1;
+            border: 1px dashed #ffb300;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        /* Loading Overlay */
+        #loadingOverlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+        .spinner-custom {
+            color: var(--primary-red);
+            width: 3rem;
+            height: 3rem;
+        }
+
+        /* Responsive Adjustments */
+        @media (max-width: 768px) {
+            .cal-grid { gap: 5px; }
+            .cal-cell { min-height: 80px; padding: 5px; }
+            .date-num { font-size: 0.9rem; }
+            .menu-name { font-size: 0.75rem; }
+            .badge-status { font-size: 0.6rem; padding: 2px 5px; }
+            .navbar-brand { font-size: 1.1rem; }
+            .logo-img { height: 45px; }
         }
     </style>
 </head>
 <body>
 
-<!-- Loader -->
-<div id="loader" class="overlay-loader" style="display: none;">
-    <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;"></div>
-    <h5 class="mt-3" id="loaderText">กำลังโหลดข้อมูล...</h5>
-</div>
-
-<div class="container py-4">
-    <div class="text-center mb-4">
-        <h2 class="fw-bold text-primary mb-3">🍲 ระบบสารสนเทศข้อมูลอาหารกลางวัน</h2>
-        <h5 class="text-secondary">โรงเรียนวัดแม่ก๋า</h5>
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay">
+        <div class="spinner-border spinner-custom" role="status"></div>
+        <h4 class="mt-3 text-danger fw-bold" id="loadingText">กำลังโหลดข้อมูล...</h4>
     </div>
 
-    <!-- ปุ่มลิงก์ภายนอก -->
-    <div class="d-flex flex-wrap justify-content-center gap-3 mb-4">
-        <a href="#" target="_blank" class="btn btn-success shadow-sm">
-            📊 ภาพรวมคุณภาพอาหารกลางวัน
-        </a>
-        <a href="#" target="_blank" class="btn btn-info text-white shadow-sm">
-            📈 ภาพรวมภาวะโภชนาการนักเรียน
-        </a>
-    </div>
-
-    <!-- แดชบอร์ดปฏิทิน -->
-    <div class="card shadow-sm border-0 rounded-3 p-4">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <button class="btn btn-outline-primary" onclick="changeMonth(-1)">◀ เดือนก่อนหน้า</button>
-            <h4 id="monthYearLabel" class="fw-bold mb-0 text-dark">เดือน ปี</h4>
-            <button class="btn btn-outline-primary" onclick="changeMonth(1)">เดือนถัดไป ▶</button>
+    <!-- Header -->
+    <nav class="navbar navbar-custom">
+        <div class="container d-flex justify-content-center justify-content-md-start">
+            <span class="navbar-brand mb-0 text-center text-md-start">
+                <img src="https://img2.pic.in.th/logob0b7643db577ceee.png" alt="Logo" class="logo-img">
+                ระบบสารสนเทศข้อมูลอาหารกลางวัน<br class="d-md-none"><span class="d-none d-md-inline"> </span>โรงเรียนวัดแม่กะ
+            </span>
         </div>
+    </nav>
+
+    <div class="container pb-5">
         
-        <div class="calendar-grid text-center">
-            <div class="calendar-header text-danger">อา.</div>
-            <div class="calendar-header">จ.</div>
-            <div class="calendar-header">อ.</div>
-            <div class="calendar-header">พ.</div>
-            <div class="calendar-header">พฤ.</div>
-            <div class="calendar-header">ศ.</div>
-            <div class="calendar-header">ส.</div>
+        <!-- External Links -->
+        <div class="link-buttons">
+            <a href="https://www.thaischoollunch.in.th/tsldashboard.html" target="_blank" class="btn btn-custom-yellow">
+                <i class="fa-solid fa-chart-pie me-2"></i> ภาพรวมคุณภาพอาหารกลางวัน
+            </a>
+            <a href="https://www.thaischoollunch.in.th/kd_dashboard.html" target="_blank" class="btn btn-custom-yellow">
+                <i class="fa-solid fa-child me-2"></i> ภาพรวมภาวะโภชนาการนักเรียน
+            </a>
         </div>
-        <div class="calendar-grid" id="calendarBody">
-            <!-- สร้างวันที่อัตโนมัติจาก JavaScript -->
-        </div>
-    </div>
-</div>
 
-<!-- Modal จัดการรูปภาพ -->
-<div class="modal fade" id="lunchModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow">
-            <div class="modal-header bg-primary text-white border-0">
-                <h5 class="modal-title fw-bold" id="modalMenuName">ชื่อเมนูอาหาร</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        <!-- Calendar Section -->
+        <div class="calendar-card">
+            <div class="calendar-header">
+                <button class="btn btn-outline-danger" onclick="changeMonth(-1)">
+                    <i class="fa-solid fa-chevron-left"></i> เดือนก่อนหน้า
+                </button>
+                <h3 id="monthYearDisplay">มิถุนายน 2567</h3>
+                <button class="btn btn-outline-danger" onclick="changeMonth(1)">
+                    เดือนถัดไป <i class="fa-solid fa-chevron-right"></i>
+                </button>
             </div>
-            <div class="modal-body p-4 text-center">
-                <p id="modalDateDisplay" class="text-secondary fw-bold mb-3"></p>
-                
-                <div class="bg-light rounded p-2 mb-3" style="min-height: 200px; display: flex; align-items: center; justify-content: center;">
-                    <img id="lunchImage" src="" alt="รูปอาหาร" class="img-fluid rounded shadow-sm" style="max-height: 250px; display: none; width: 100%; object-fit: cover;">
-                    <p id="noImageText" class="text-danger fw-bold m-0">❌ ยังไม่มีรูปภาพสำหรับวันนี้</p>
+
+            <div class="cal-grid" id="calendarHeader">
+                <div class="cal-header-cell bg-secondary">อาทิตย์</div>
+                <div class="cal-header-cell">จันทร์</div>
+                <div class="cal-header-cell">อังคาร</div>
+                <div class="cal-header-cell">พุธ</div>
+                <div class="cal-header-cell">พฤหัสบดี</div>
+                <div class="cal-header-cell">ศุกร์</div>
+                <div class="cal-header-cell bg-secondary">เสาร์</div>
+            </div>
+            
+            <div class="cal-grid mt-2" id="calendarBody">
+                <!-- Javascript will populate days here -->
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Modal for Managing Image -->
+    <div class="modal fade" id="foodModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title fw-bold" id="modalDateTitle">วันที่...</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                
-                <hr class="text-muted">
-                <div class="text-start bg-light p-3 rounded border">
-                    <label class="form-label small fw-bold text-primary">⚙️ ส่วนจัดการรูปภาพ (สำหรับเจ้าหน้าที่)</label>
-                    <input type="file" id="imageUploadInput" class="form-control mb-2" accept="image/jpeg, image/png">
-                    <input type="password" id="pinInput" class="form-control mb-3" placeholder="ระบุ PIN (wmk) เพื่อยืนยัน">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <h6 class="fw-bold text-danger">เมนูอาหาร:</h6>
+                        <p id="modalMenuName" class="fs-5 mb-1">-</p>
+                        <h6 class="fw-bold text-warning mt-2">ผลไม้/ของหวาน:</h6>
+                        <p id="modalFruit" class="fs-6">-</p>
+                    </div>
+
+                    <img id="modalImage" src="" alt="Food Image" class="food-image-preview">
                     
-                    <div class="d-flex justify-content-between">
-                        <button class="btn btn-success" onclick="uploadImage()">📤 อัปโหลด</button>
-                        <button class="btn btn-outline-danger" onclick="deleteImage()" id="deleteBtn" style="display: none;">🗑️ ลบรูปภาพ</button>
+                    <div id="noImageText" class="text-center text-muted my-4">
+                        <i class="fa-solid fa-image fa-3x mb-2 text-light"></i><br>
+                        ยังไม่มีรูปภาพอาหารสำหรับวันนี้
                     </div>
+
+                    <hr>
+
+                    <!-- Admin Section -->
+                    <div class="admin-section">
+                        <h6 class="fw-bold text-danger mb-3"><i class="fa-solid fa-lock"></i> ส่วนจัดการสำหรับเจ้าหน้าที่</h6>
+                        
+                        <div class="mb-3">
+                            <label class="form-label font-sm">อัปโหลดรูปภาพใหม่ (ไม่เกิน 2MB)</label>
+                            <input class="form-control form-control-sm" type="file" id="imageInput" accept="image/*">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label font-sm">รหัส PIN ยืนยันสิทธิ์</label>
+                            <input type="password" class="form-control form-control-sm" id="pinInput" placeholder="กรอกรหัส PIN">
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <button type="button" class="btn btn-success btn-sm w-50 me-2" onclick="handleUpload()">
+                                <i class="fa-solid fa-cloud-arrow-up"></i> อัปโหลด
+                            </button>
+                            <button type="button" class="btn btn-danger btn-sm w-50" id="btnDelete" onclick="handleDelete()" style="display:none;">
+                                <i class="fa-solid fa-trash"></i> ลบรูปภาพ
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Hidden fields to store current selected date and fileId -->
+                    <input type="hidden" id="currentSelectedDate">
+                    <input type="hidden" id="currentFileId">
+
                 </div>
             </div>
         </div>
     </div>
-</div>
 
-<!-- ซ่อนตัวแปรสำหรับส่งค่า -->
-<input type="hidden" id="hiddenDate">
-<input type="hidden" id="hiddenFileId">
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-    // ==========================================
-    // นำ Web App URL ที่ได้จาก Apps Script มาวางที่นี่
-    // ==========================================
-    const GAS_API_URL = "ใส่_URL_WEB_APP_ที่นี่"; 
-    
-    let currentDate = new Date(); // เวลาปัจจุบัน (ยึดตามเครื่องผู้ใช้)
-    let lunchModal;
-    let menuDataFromSheet = []; // เก็บข้อมูลที่ดึงมาจาก Sheet
-
-    const monthsTh = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
-
-    document.addEventListener("DOMContentLoaded", () => {
-        lunchModal = new bootstrap.Modal(document.getElementById('lunchModal'));
-        fetchDataFromSheet(); // โหลดข้อมูลตอนเปิดเว็บ
-    });
-
-    // แสดง/ซ่อน Loader
-    function showLoader(text) {
-        document.getElementById('loaderText').innerText = text;
-        document.getElementById('loader').style.display = 'flex';
-    }
-    function hideLoader() { document.getElementById('loader').style.display = 'none'; }
-
-    // ดึงข้อมูลจาก Sheet
-    async function fetchDataFromSheet() {
-        showLoader("กำลังดึงข้อมูลอาหารกลางวัน...");
-        try {
-            const response = await fetch(GAS_API_URL);
-            menuDataFromSheet = await response.json();
-            renderCalendar();
-        } catch (error) {
-            alert("เกิดข้อผิดพลาดในการดึงข้อมูล กรุณารีเฟรชหน้าเว็บ");
-            console.error(error);
-        } finally {
-            hideLoader();
-        }
-    }
-
-    // เปลี่ยนเดือน
-    function changeMonth(step) {
-        currentDate.setMonth(currentDate.getMonth() + step);
-        renderCalendar();
-    }
-
-    // สร้างปฏิทิน
-    function renderCalendar() {
-        const year = currentDate.getFullYear();
-        const month = currentDate.getMonth();
-        const today = new Date();
-
-        document.getElementById('monthYearLabel').innerText = `${monthsTh[month]} ${year + 543}`;
+    <script>
+        // ==========================================
+        // Constants & Variables
+        // ==========================================
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz-RrV-6l6OCDMf1FnabnYmKcbYt1CyvdJx30482s2OoSeirQPgo5sCqbRXTriQwgU5zg/exec';
         
-        const firstDayIndex = new Date(year, month, 1).getDay();
-        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        let foodData = [];
+        let currentDate = new Date(); // วันที่ที่กำลังแสดงบนปฏิทิน (เริ่มต้นคือวันปัจจุบัน)
         
-        const calendarBody = document.getElementById('calendarBody');
-        calendarBody.innerHTML = '';
+        const monthNames = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
+        let modalInstance = null;
 
-        // ช่องว่างก่อนเริ่มวันที่ 1
-        for (let i = 0; i < firstDayIndex; i++) {
-            calendarBody.innerHTML += `<div class="calendar-day empty"></div>`;
-        }
-
-        // สร้างวันที่
-        for (let day = 1; day <= daysInMonth; day++) {
-            // สร้าง format วันที่ YYYY-MM-DD เพื่อไปเทียบกับ Sheet
-            const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-            const displayDateStr = `${day} ${monthsTh[month]} ${year + 543}`;
-            
-            // หาข้อมูลเมนูในวันที่นี้
-            const dayData = menuDataFromSheet.find(item => item.date === dateStr);
-            const menuName = dayData ? dayData.menuName : "รอระบุเมนู";
-            const imageUrl = dayData && dayData.imageUrl ? dayData.imageUrl : "";
-            const fileId = dayData && dayData.fileId ? dayData.fileId : "";
-            
-            const hasImage = imageUrl !== "";
-            const badgeHtml = hasImage 
-                ? `<span class="badge bg-success status-badge">🖼️ มีรูปภาพ</span>` 
-                : `<span class="badge bg-secondary status-badge">ไม่มีรูป</span>`;
-
-            let classes = "calendar-day active";
-            if (day === today.getDate() && month === today.getMonth() && year === today.getFullYear()) {
-                classes += " today";
-            }
-            // ไม่ให้กดเสาร์อาทิตย์ (ถ้าต้องการ)
-            const dayOfWeek = new Date(year, month, day).getDay();
-            if(dayOfWeek === 0 || dayOfWeek === 6) classes = "calendar-day empty";
-
-            if(dayOfWeek !== 0 && dayOfWeek !== 6) {
-                calendarBody.innerHTML += `
-                    <div class="${classes}" onclick="openModal('${dateStr}', '${displayDateStr}', '${menuName}', '${imageUrl}', '${fileId}')">
-                        <div class="date-num">${day}</div>
-                        <div class="menu-title">${menuName}</div>
-                        ${badgeHtml}
-                    </div>
-                `;
-            } else {
-                 calendarBody.innerHTML += `
-                    <div class="calendar-day empty text-center pt-4 text-muted small border-0"><span class="opacity-50">${day}</span></div>
-                `;
-            }
-        }
-    }
-
-    // เปิด Modal จัดการรูป
-    function openModal(dateStr, displayDate, menuName, imageUrl, fileId) {
-        document.getElementById('hiddenDate').value = dateStr;
-        document.getElementById('hiddenFileId').value = fileId;
-        document.getElementById('modalDateDisplay').innerText = displayDate;
-        
-        // ถ้าผู้ใช้กรอกชื่อเมนูจาก Google Sheet มา โชว์ชื่อนั้น ถ้าไม่ให้ขึ้นว่ากำลังรอข้อมูล
-        document.getElementById('modalMenuName').innerText = menuName;
-
-        document.getElementById('pinInput').value = ''; 
-        document.getElementById('imageUploadInput').value = ''; 
-
-        const imgEl = document.getElementById('lunchImage');
-        const noImgEl = document.getElementById('noImageText');
-        const delBtn = document.getElementById('deleteBtn');
-
-        if (imageUrl && imageUrl !== "undefined") {
-            imgEl.src = imageUrl;
-            imgEl.style.display = 'block';
-            noImgEl.style.display = 'none';
-            delBtn.style.display = 'block';
-        } else {
-            imgEl.style.display = 'none';
-            noImgEl.style.display = 'block';
-            delBtn.style.display = 'none';
-        }
-        lunchModal.show();
-    }
-
-    // แปลงไฟล์เป็น Base64
-    function getBase64(file) {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = () => resolve(reader.result.split(',')[1]); // เอาเฉพาะเนื้อหา
-            reader.onerror = error => reject(error);
+        // ==========================================
+        // Initialization
+        // ==========================================
+        document.addEventListener('DOMContentLoaded', () => {
+            modalInstance = new bootstrap.Modal(document.getElementById('foodModal'));
+            fetchData();
         });
-    }
 
-    // อัปโหลดรูป
-    async function uploadImage() {
-        const pin = document.getElementById('pinInput').value;
-        const fileInput = document.getElementById('imageUploadInput');
-        const dateStr = document.getElementById('hiddenDate').value;
-        const menuName = document.getElementById('modalMenuName').innerText;
-
-        if (!pin) return alert("กรุณาระบุ PIN");
-        if (fileInput.files.length === 0) return alert("กรุณาเลือกรูปภาพ");
-
-        const file = fileInput.files[0];
-        if (file.size > 5 * 1024 * 1024) return alert("ขนาดรูปภาพต้องไม่เกิน 5MB");
-
-        showLoader("กำลังอัปโหลดรูปภาพ...");
-        
-        try {
-            const base64Data = await getBase64(file);
-            const payload = {
-                action: "upload",
-                pin: pin,
-                date: dateStr,
-                menuName: menuName,
-                filename: file.name,
-                mimeType: file.type,
-                base64: base64Data
-            };
-
-            const response = await fetch(GAS_API_URL, {
-                method: "POST",
-                // ส่งเป็น text/plain ป้องกันปัญหา CORS Request
-                headers: { "Content-Type": "text/plain;charset=utf-8" },
-                body: JSON.stringify(payload)
-            });
-
-            const result = await response.json();
-            
-            if (result.status === "success") {
-                alert("อัปโหลดสำเร็จ!");
-                lunchModal.hide();
-                fetchDataFromSheet(); // รีเฟรชข้อมูล
-            } else {
-                alert("ผิดพลาด: " + result.message);
-            }
-        } catch (error) {
-            alert("เกิดข้อผิดพลาดในการส่งข้อมูล");
-            console.error(error);
-        } finally {
-            hideLoader();
+        // ==========================================
+        // Fetch Data from Backend
+        // ==========================================
+        function fetchData() {
+            showLoading('กำลังดึงข้อมูลฐานข้อมูล...');
+            fetch(SCRIPT_URL)
+                .then(response => response.json())
+                .then(result => {
+                    if (result.status === 'success') {
+                        foodData = result.data;
+                        renderCalendar();
+                    } else {
+                        Swal.fire('ข้อผิดพลาด', result.message, 'error');
+                    }
+                })
+                .catch(error => {
+                    Swal.fire('ข้อผิดพลาดการเชื่อมต่อ', error.message, 'error');
+                })
+                .finally(() => {
+                    hideLoading();
+                });
         }
-    }
 
-    // ลบรูปภาพ
-    async function deleteImage() {
-        const pin = document.getElementById('pinInput').value;
-        const dateStr = document.getElementById('hiddenDate').value;
-        const fileId = document.getElementById('hiddenFileId').value;
-
-        if (!pin) return alert("กรุณาระบุ PIN เพื่อลบรูปภาพ");
-        if (!confirm("ต้องการลบรูปภาพนี้ใช่หรือไม่?")) return;
-
-        showLoader("กำลังลบรูปภาพ...");
-
-        try {
-            const payload = {
-                action: "delete",
-                pin: pin,
-                date: dateStr,
-                fileId: fileId
-            };
-
-            const response = await fetch(GAS_API_URL, {
-                method: "POST",
-                headers: { "Content-Type": "text/plain;charset=utf-8" },
-                body: JSON.stringify(payload)
-            });
-
-            const result = await response.json();
+        // ==========================================
+        // Calendar Rendering
+        // ==========================================
+        function renderCalendar() {
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
             
-            if (result.status === "success") {
-                alert("ลบรูปภาพสำเร็จ");
-                lunchModal.hide();
-                fetchDataFromSheet(); // รีเฟรชข้อมูล
-            } else {
-                alert("ผิดพลาด: " + result.message);
+            // แสดงผล หัวเดือน ปี พ.ศ.
+            document.getElementById('monthYearDisplay').innerText = `${monthNames[month]} ${year + 543}`;
+            
+            const calendarBody = document.getElementById('calendarBody');
+            calendarBody.innerHTML = '';
+
+            const firstDay = new Date(year, month, 1).getDay(); // หาวันแรกของเดือนว่าตรงกับวันอะไร (0=Sun, 1=Mon...)
+            const daysInMonth = new Date(year, month + 1, 0).getDate(); // หาจำนวนวันในเดือนนั้น
+
+            // เติมช่องว่างด้านหน้า
+            for (let i = 0; i < firstDay; i++) {
+                const emptyCell = document.createElement('div');
+                emptyCell.className = 'cal-cell empty';
+                calendarBody.appendChild(emptyCell);
             }
-        } catch (error) {
-            alert("เกิดข้อผิดพลาดในการลบข้อมูล");
-            console.error(error);
-        } finally {
-            hideLoader();
+
+            // สร้างช่องวันที่
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dateObj = new Date(year, month, day);
+                const dayOfWeek = dateObj.getDay();
+                
+                // Format Date for matching (YYYY-MM-DD)
+                const yyyy = dateObj.getFullYear();
+                const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
+                const dd = String(dateObj.getDate()).padStart(2, '0');
+                const dateString = `${yyyy}-${mm}-${dd}`;
+
+                const cell = document.createElement('div');
+                cell.className = 'cal-cell';
+                
+                const dateDiv = document.createElement('div');
+                dateDiv.className = 'date-num';
+                dateDiv.innerText = day;
+                cell.appendChild(dateDiv);
+
+                // ตรวจสอบวันเสาร์-อาทิตย์
+                if (dayOfWeek === 0 || dayOfWeek === 6) {
+                    cell.classList.add('weekend');
+                    calendarBody.appendChild(cell);
+                    continue; // ข้าม ไม่ต้องใส่คลิกอีเวนต์
+                }
+
+                // หาข้อมูลอาหารในวันนั้นๆ
+                const dayData = foodData.find(d => d.Date === dateString);
+
+                if (dayData && dayData.MenuName) {
+                    const menuDiv = document.createElement('div');
+                    menuDiv.className = 'menu-name';
+                    menuDiv.innerText = dayData.MenuName;
+                    cell.appendChild(menuDiv);
+
+                    const badge = document.createElement('span');
+                    badge.className = 'badge-status ' + (dayData.ImageURL ? 'badge-has-img' : 'badge-no-img');
+                    badge.innerHTML = dayData.ImageURL ? '<i class="fa-solid fa-check"></i> มีรูปภาพ' : 'รอรูปภาพ';
+                    cell.appendChild(badge);
+                } else {
+                    const menuDiv = document.createElement('div');
+                    menuDiv.className = 'menu-name text-muted';
+                    menuDiv.innerText = '-';
+                    cell.appendChild(menuDiv);
+                }
+
+                // ใส่ Event เมื่อคลิก
+                cell.onclick = () => openModal(dateString, dayData);
+
+                calendarBody.appendChild(cell);
+            }
         }
-    }
-</script>
+
+        function changeMonth(step) {
+            currentDate.setMonth(currentDate.getMonth() + step);
+            renderCalendar();
+        }
+
+        // ==========================================
+        // Modal Logic
+        // ==========================================
+        function openModal(dateString, dayData) {
+            // ปรับ Date ให้แสดงสวยงาม
+            const parts = dateString.split('-');
+            const displayDate = `${parseInt(parts[2])} ${monthNames[parseInt(parts[1])-1]} ${parseInt(parts[0])+543}`;
+            
+            document.getElementById('modalDateTitle').innerText = `วันที่ ${displayDate}`;
+            document.getElementById('currentSelectedDate').value = dateString;
+
+            // รีเซ็ตฟอร์ม
+            document.getElementById('imageInput').value = '';
+            document.getElementById('pinInput').value = '';
+
+            const imgEl = document.getElementById('modalImage');
+            const noImgEl = document.getElementById('noImageText');
+            const btnDelete = document.getElementById('btnDelete');
+
+            if (dayData) {
+                document.getElementById('modalMenuName').innerText = dayData.MenuName || '-';
+                document.getElementById('modalFruit').innerText = dayData.Fruit || '-';
+                
+                if (dayData.ImageURL) {
+                    // แก้ไขปัญหา Google Drive ไม่แสดงภาพ โดยใช้ Thumbnail API ดึงภาพขนาดกว้างไม่เกิน 800px มาแสดง
+                    if (dayData.FileID) {
+                        imgEl.src = `https://drive.google.com/thumbnail?id=${dayData.FileID}&sz=w800`;
+                    } else {
+                        imgEl.src = dayData.ImageURL;
+                    }
+                    imgEl.style.display = 'block';
+                    noImgEl.style.display = 'none';
+                    document.getElementById('currentFileId').value = dayData.FileID || '';
+                    btnDelete.style.display = 'block';
+                } else {
+                    imgEl.style.display = 'none';
+                    noImgEl.style.display = 'block';
+                    document.getElementById('currentFileId').value = '';
+                    btnDelete.style.display = 'none';
+                }
+            } else {
+                document.getElementById('modalMenuName').innerText = '-';
+                document.getElementById('modalFruit').innerText = '-';
+                imgEl.style.display = 'none';
+                noImgEl.style.display = 'block';
+                document.getElementById('currentFileId').value = '';
+                btnDelete.style.display = 'none';
+            }
+
+            modalInstance.show();
+        }
+
+        // ==========================================
+        // Upload Action
+        // ==========================================
+        function handleUpload() {
+            const fileInput = document.getElementById('imageInput');
+            const pin = document.getElementById('pinInput').value;
+            const targetDate = document.getElementById('currentSelectedDate').value;
+
+            if (!fileInput.files.length) {
+                Swal.fire('คำเตือน', 'กรุณาเลือกไฟล์รูปภาพก่อน', 'warning');
+                return;
+            }
+            if (!pin) {
+                Swal.fire('คำเตือน', 'กรุณากรอกรหัส PIN', 'warning');
+                return;
+            }
+
+            const file = fileInput.files[0];
+            
+            // เช็คขนาดไฟล์ (ไม่เกิน 2MB เพื่อความรวดเร็ว)
+            if(file.size > 2 * 1024 * 1024) {
+                 Swal.fire('คำเตือน', 'ไฟล์มีขนาดใหญ่เกิน 2MB กรุณาลดขนาดไฟล์', 'warning');
+                 return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                // ดึงเฉพาะส่วน Base64 (ตัด data:image/jpeg;base64, ออก)
+                const base64Data = e.target.result.split(',')[1]; 
+
+                const payload = {
+                    action: 'upload',
+                    pin: pin,
+                    date: targetDate,
+                    filename: file.name,
+                    mimeType: file.type,
+                    base64: base64Data
+                };
+
+                sendPostRequest(payload, 'กำลังอัปโหลดรูปภาพ...');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // ==========================================
+        // Delete Action
+        // ==========================================
+        function handleDelete() {
+            const pin = document.getElementById('pinInput').value;
+            const targetDate = document.getElementById('currentSelectedDate').value;
+            const fileId = document.getElementById('currentFileId').value;
+
+            if (!pin) {
+                Swal.fire('คำเตือน', 'กรุณากรอกรหัส PIN เพื่อยืนยันการลบ', 'warning');
+                return;
+            }
+            if (!fileId) return;
+
+            Swal.fire({
+                title: 'ยืนยันการลบรูปภาพ?',
+                text: "รูปภาพนี้จะถูกลบออกจากระบบและไม่สามารถกู้คืนได้",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'ยืนยันการลบ',
+                cancelButtonText: 'ยกเลิก'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const payload = {
+                        action: 'delete',
+                        pin: pin,
+                        date: targetDate,
+                        fileId: fileId
+                    };
+                    sendPostRequest(payload, 'กำลังลบรูปภาพ...');
+                }
+            });
+        }
+
+        // ==========================================
+        // Generic Fetch POST Function
+        // ==========================================
+        function sendPostRequest(payload, loadingMsg) {
+            showLoading(loadingMsg);
+            
+            fetch(SCRIPT_URL, {
+                method: 'POST',
+                // ต้องใช้ text/plain ในการส่งไป GAS เพื่อหลีกเลี่ยง CORS Preflight options
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify(payload)
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.status === 'success') {
+                    modalInstance.hide();
+                    Swal.fire('สำเร็จ', result.message, 'success').then(() => {
+                        fetchData(); // ดึงข้อมูลใหม่เพื่อรีเฟรชหน้าจอ
+                    });
+                } else {
+                    Swal.fire('เกิดข้อผิดพลาด', result.message, 'error');
+                }
+            })
+            .catch(error => {
+                Swal.fire('ข้อผิดพลาดการเชื่อมต่อ', error.message, 'error');
+            })
+            .finally(() => {
+                hideLoading();
+            });
+        }
+
+        // ==========================================
+        // UI Helpers
+        // ==========================================
+        function showLoading(text) {
+            document.getElementById('loadingText').innerText = text || 'กำลังโหลด...';
+            document.getElementById('loadingOverlay').style.display = 'flex';
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingOverlay').style.display = 'none';
+        }
+
+    </script>
 </body>
 </html>
