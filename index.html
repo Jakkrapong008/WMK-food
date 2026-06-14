@@ -35,6 +35,9 @@
             font-family: 'Sarabun', sans-serif;
             background-color: var(--bg-color);
             color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh; /* ดัน Footer ให้อยู่ล่างสุดเสมอ */
         }
 
         /* Navbar & Header */
@@ -57,6 +60,10 @@
             background-color: white;
             border-radius: 50%;
             padding: 2px;
+        }
+
+        .main-content {
+            flex: 1; /* ให้เนื้อหาขยายเต็มพื้นที่ที่เหลือ */
         }
 
         /* External Links */
@@ -189,8 +196,8 @@
         .food-image-preview {
             width: 100%;
             max-height: 350px;
-            object-fit: contain; /* เปลี่ยนจาก cover เป็น contain เพื่อให้ภาพแสดงครบถ้วน ไม่ถูกตัดขอบ */
-            background-color: #f0f0f0; /* สีพื้นหลังในกรณีที่ภาพเป็นแนวตั้งหรือสัดส่วนไม่พอดี */
+            object-fit: contain; 
+            background-color: #f0f0f0; 
             border-radius: 10px;
             border: 2px solid #eee;
             margin-bottom: 15px;
@@ -219,6 +226,19 @@
             color: var(--primary-red);
             width: 3rem;
             height: 3rem;
+        }
+
+        /* Footer */
+        .footer-custom {
+            background-color: #fff;
+            border-top: 2px solid var(--primary-red);
+            padding: 15px 0;
+            margin-top: auto; /* ดันให้อยู่ล่างสุด */
+        }
+        .view-counter {
+            font-size: 1.1rem;
+            color: var(--primary-red);
+            font-weight: 700;
         }
 
         /* Responsive Adjustments */
@@ -251,7 +271,8 @@
         </div>
     </nav>
 
-    <div class="container pb-5">
+    <!-- Main Content Area -->
+    <div class="container pb-4 main-content">
         
         <!-- External Links -->
         <div class="link-buttons">
@@ -289,8 +310,18 @@
                 <!-- Javascript will populate days here -->
             </div>
         </div>
-
     </div>
+
+    <!-- Footer Counter -->
+    <footer class="footer-custom text-center shadow-sm">
+        <div class="container">
+            <p class="mb-1 text-muted">
+                <i class="fa-solid fa-chart-line me-1 text-secondary"></i> จำนวนผู้เข้าชมเว็บไซต์ทั้งหมด 
+                <span id="viewCountDisplay" class="view-counter"><i class="fa-solid fa-spinner fa-spin fa-sm"></i></span> ครั้ง
+            </p>
+            <small class="text-muted">© 2026 โรงเรียนวัดแม่กะ</small>
+        </div>
+    </footer>
 
     <!-- Modal for Managing Image -->
     <div class="modal fade" id="foodModal" tabindex="-1" aria-hidden="true">
@@ -341,7 +372,6 @@
                         </div>
                     </div>
 
-                    <!-- Hidden fields to store current selected date and fileId -->
                     <input type="hidden" id="currentSelectedDate">
                     <input type="hidden" id="currentFileId">
 
@@ -357,10 +387,11 @@
         // ==========================================
         // Constants & Variables
         // ==========================================
+        // อย่าลืมอัปเดต SCRIPT_URL หากทำการ Deploy Web App ใหม่
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz-RrV-6l6OCDMf1FnabnYmKcbYt1CyvdJx30482s2OoSeirQPgo5sCqbRXTriQwgU5zg/exec';
         
         let foodData = [];
-        let currentDate = new Date(); // วันที่ที่กำลังแสดงบนปฏิทิน (เริ่มต้นคือวันปัจจุบัน)
+        let currentDate = new Date(); 
         
         const monthNames = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
         let modalInstance = null;
@@ -384,6 +415,11 @@
                     if (result.status === 'success') {
                         foodData = result.data;
                         renderCalendar();
+                        
+                        // อัปเดตตัวเลขผู้เข้าชมที่ส่งกลับมาจาก GAS
+                        if (result.views) {
+                            document.getElementById('viewCountDisplay').innerText = Number(result.views).toLocaleString();
+                        }
                     } else {
                         Swal.fire('ข้อผิดพลาด', result.message, 'error');
                     }
@@ -403,28 +439,24 @@
             const year = currentDate.getFullYear();
             const month = currentDate.getMonth();
             
-            // แสดงผล หัวเดือน ปี พ.ศ.
             document.getElementById('monthYearDisplay').innerText = `${monthNames[month]} ${year + 543}`;
             
             const calendarBody = document.getElementById('calendarBody');
             calendarBody.innerHTML = '';
 
-            const firstDay = new Date(year, month, 1).getDay(); // หาวันแรกของเดือนว่าตรงกับวันอะไร (0=Sun, 1=Mon...)
-            const daysInMonth = new Date(year, month + 1, 0).getDate(); // หาจำนวนวันในเดือนนั้น
+            const firstDay = new Date(year, month, 1).getDay(); 
+            const daysInMonth = new Date(year, month + 1, 0).getDate(); 
 
-            // เติมช่องว่างด้านหน้า
             for (let i = 0; i < firstDay; i++) {
                 const emptyCell = document.createElement('div');
                 emptyCell.className = 'cal-cell empty';
                 calendarBody.appendChild(emptyCell);
             }
 
-            // สร้างช่องวันที่
             for (let day = 1; day <= daysInMonth; day++) {
                 const dateObj = new Date(year, month, day);
                 const dayOfWeek = dateObj.getDay();
                 
-                // Format Date for matching (YYYY-MM-DD)
                 const yyyy = dateObj.getFullYear();
                 const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
                 const dd = String(dateObj.getDate()).padStart(2, '0');
@@ -438,14 +470,12 @@
                 dateDiv.innerText = day;
                 cell.appendChild(dateDiv);
 
-                // ตรวจสอบวันเสาร์-อาทิตย์
                 if (dayOfWeek === 0 || dayOfWeek === 6) {
                     cell.classList.add('weekend');
                     calendarBody.appendChild(cell);
-                    continue; // ข้าม ไม่ต้องใส่คลิกอีเวนต์
+                    continue; 
                 }
 
-                // หาข้อมูลอาหารในวันนั้นๆ
                 const dayData = foodData.find(d => d.Date === dateString);
 
                 if (dayData && dayData.MenuName) {
@@ -465,9 +495,7 @@
                     cell.appendChild(menuDiv);
                 }
 
-                // ใส่ Event เมื่อคลิก
                 cell.onclick = () => openModal(dateString, dayData);
-
                 calendarBody.appendChild(cell);
             }
         }
@@ -481,14 +509,12 @@
         // Modal Logic
         // ==========================================
         function openModal(dateString, dayData) {
-            // ปรับ Date ให้แสดงสวยงาม
             const parts = dateString.split('-');
             const displayDate = `${parseInt(parts[2])} ${monthNames[parseInt(parts[1])-1]} ${parseInt(parts[0])+543}`;
             
             document.getElementById('modalDateTitle').innerText = `วันที่ ${displayDate}`;
             document.getElementById('currentSelectedDate').value = dateString;
 
-            // รีเซ็ตฟอร์ม
             document.getElementById('imageInput').value = '';
             document.getElementById('pinInput').value = '';
 
@@ -501,7 +527,6 @@
                 document.getElementById('modalFruit').innerText = dayData.Fruit || '-';
                 
                 if (dayData.ImageURL) {
-                    // แก้ไขปัญหา Google Drive ไม่แสดงภาพ โดยใช้ Thumbnail API ดึงภาพขนาดกว้างไม่เกิน 800px มาแสดง
                     if (dayData.FileID) {
                         imgEl.src = `https://drive.google.com/thumbnail?id=${dayData.FileID}&sz=w800`;
                     } else {
@@ -548,7 +573,6 @@
 
             const file = fileInput.files[0];
             
-            // เช็คขนาดไฟล์ (ไม่เกิน 2MB เพื่อความรวดเร็ว)
             if(file.size > 2 * 1024 * 1024) {
                  Swal.fire('คำเตือน', 'ไฟล์มีขนาดใหญ่เกิน 2MB กรุณาลดขนาดไฟล์', 'warning');
                  return;
@@ -556,7 +580,6 @@
 
             const reader = new FileReader();
             reader.onload = function(e) {
-                // ดึงเฉพาะส่วน Base64 (ตัด data:image/jpeg;base64, ออก)
                 const base64Data = e.target.result.split(',')[1]; 
 
                 const payload = {
@@ -617,7 +640,6 @@
             
             fetch(SCRIPT_URL, {
                 method: 'POST',
-                // ต้องใช้ text/plain ในการส่งไป GAS เพื่อหลีกเลี่ยง CORS Preflight options
                 headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                 body: JSON.stringify(payload)
             })
@@ -626,7 +648,7 @@
                 if (result.status === 'success') {
                     modalInstance.hide();
                     Swal.fire('สำเร็จ', result.message, 'success').then(() => {
-                        fetchData(); // ดึงข้อมูลใหม่เพื่อรีเฟรชหน้าจอ
+                        fetchData(); 
                     });
                 } else {
                     Swal.fire('เกิดข้อผิดพลาด', result.message, 'error');
