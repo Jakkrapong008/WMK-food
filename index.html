@@ -319,7 +319,7 @@
                 <i class="fa-solid fa-chart-line me-1 text-secondary"></i> จำนวนผู้เข้าชมเว็บไซต์ทั้งหมด 
                 <span id="viewCountDisplay" class="view-counter"><i class="fa-solid fa-spinner fa-spin fa-sm"></i></span> ครั้ง
             </p>
-            <small class="text-muted">© 2026 โรงเรียนวัดแม่กะ</small>
+            <small class="text-muted">© 2024 โรงเรียนวัดแม่กะ</small>
         </div>
     </footer>
 
@@ -333,10 +333,11 @@
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <h6 class="fw-bold text-danger">เมนูอาหาร:</h6>
-                        <p id="modalMenuName" class="fs-5 mb-1">-</p>
-                        <h6 class="fw-bold text-warning mt-2">ผลไม้/ของหวาน:</h6>
-                        <p id="modalFruit" class="fs-6">-</p>
+                        <label class="fw-bold text-danger form-label mb-1">เมนูอาหาร:</label>
+                        <input type="text" id="modalMenuNameInput" class="form-control" placeholder="ระบุเมนูอาหาร">
+                        
+                        <label class="fw-bold text-warning form-label mt-2 mb-1">ผลไม้/ของหวาน:</label>
+                        <input type="text" id="modalFruitInput" class="form-control" placeholder="ระบุผลไม้/ของหวาน">
                     </div>
 
                     <img id="modalImage" src="" alt="Food Image" class="food-image-preview">
@@ -353,7 +354,7 @@
                         <h6 class="fw-bold text-danger mb-3"><i class="fa-solid fa-lock"></i> ส่วนจัดการสำหรับเจ้าหน้าที่</h6>
                         
                         <div class="mb-3">
-                            <label class="form-label font-sm">อัปโหลดรูปภาพใหม่ (ไม่เกิน 2MB)</label>
+                            <label class="form-label font-sm">แนบรูปภาพใหม่ (ไม่บังคับ/ไม่เกิน 2MB)</label>
                             <input class="form-control form-control-sm" type="file" id="imageInput" accept="image/*">
                         </div>
                         
@@ -363,8 +364,8 @@
                         </div>
 
                         <div class="d-flex justify-content-between">
-                            <button type="button" class="btn btn-success btn-sm w-50 me-2" onclick="handleUpload()">
-                                <i class="fa-solid fa-cloud-arrow-up"></i> อัปโหลด
+                            <button type="button" class="btn btn-success btn-sm w-50 me-2" onclick="handleSave()">
+                                <i class="fa-solid fa-floppy-disk"></i> แก้ไขข้อมูล
                             </button>
                             <button type="button" class="btn btn-danger btn-sm w-50" id="btnDelete" onclick="handleDelete()" style="display:none;">
                                 <i class="fa-solid fa-trash"></i> ลบรูปภาพ
@@ -523,8 +524,9 @@
             const btnDelete = document.getElementById('btnDelete');
 
             if (dayData) {
-                document.getElementById('modalMenuName').innerText = dayData.MenuName || '-';
-                document.getElementById('modalFruit').innerText = dayData.Fruit || '-';
+                // อัปเดตข้อมูลลงในช่อง Input แบบ Text
+                document.getElementById('modalMenuNameInput').value = dayData.MenuName || '';
+                document.getElementById('modalFruitInput').value = dayData.Fruit || '';
                 
                 if (dayData.ImageURL) {
                     if (dayData.FileID) {
@@ -543,8 +545,9 @@
                     btnDelete.style.display = 'none';
                 }
             } else {
-                document.getElementById('modalMenuName').innerText = '-';
-                document.getElementById('modalFruit').innerText = '-';
+                // เคลียร์ช่อง Input ให้ว่าง
+                document.getElementById('modalMenuNameInput').value = '';
+                document.getElementById('modalFruitInput').value = '';
                 imgEl.style.display = 'none';
                 noImgEl.style.display = 'block';
                 document.getElementById('currentFileId').value = '';
@@ -555,45 +558,50 @@
         }
 
         // ==========================================
-        // Upload Action
+        // Upload & Save Action
         // ==========================================
-        function handleUpload() {
+        function handleSave() {
             const fileInput = document.getElementById('imageInput');
             const pin = document.getElementById('pinInput').value;
             const targetDate = document.getElementById('currentSelectedDate').value;
+            const menuInput = document.getElementById('modalMenuNameInput').value;
+            const fruitInput = document.getElementById('modalFruitInput').value;
 
-            if (!fileInput.files.length) {
-                Swal.fire('คำเตือน', 'กรุณาเลือกไฟล์รูปภาพก่อน', 'warning');
-                return;
-            }
             if (!pin) {
                 Swal.fire('คำเตือน', 'กรุณากรอกรหัส PIN', 'warning');
                 return;
             }
 
-            const file = fileInput.files[0];
-            
-            if(file.size > 2 * 1024 * 1024) {
-                 Swal.fire('คำเตือน', 'ไฟล์มีขนาดใหญ่เกิน 2MB กรุณาลดขนาดไฟล์', 'warning');
-                 return;
-            }
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const base64Data = e.target.result.split(',')[1]; 
-
-                const payload = {
-                    action: 'upload',
-                    pin: pin,
-                    date: targetDate,
-                    filename: file.name,
-                    mimeType: file.type,
-                    base64: base64Data
-                };
-
-                sendPostRequest(payload, 'กำลังอัปโหลดรูปภาพ...');
+            // เตรียมข้อมูลที่จะส่งไปบันทึก (ทั้งข้อความและข้อมูลภาพ)
+            const payload = {
+                action: 'save',
+                pin: pin,
+                date: targetDate,
+                menu: menuInput,
+                fruit: fruitInput
             };
-            reader.readAsDataURL(file);
+
+            // กรณีมีการเลือกไฟล์รูปภาพมาด้วย
+            if (fileInput.files.length > 0) {
+                const file = fileInput.files[0];
+                
+                if(file.size > 2 * 1024 * 1024) {
+                     Swal.fire('คำเตือน', 'ไฟล์มีขนาดใหญ่เกิน 2MB กรุณาลดขนาดไฟล์', 'warning');
+                     return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    payload.base64 = e.target.result.split(',')[1]; 
+                    payload.filename = file.name;
+                    payload.mimeType = file.type;
+                    sendPostRequest(payload, 'กำลังบันทึกข้อมูลและอัปโหลดรูปภาพ...');
+                };
+                reader.readAsDataURL(file);
+            } else {
+                // กรณีบันทึกแค่ข้อความอย่างเดียว (ไม่มีรูป)
+                sendPostRequest(payload, 'กำลังบันทึกข้อมูล...');
+            }
         }
 
         // ==========================================
