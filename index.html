@@ -354,7 +354,7 @@
                         <h6 class="fw-bold text-danger mb-3"><i class="fa-solid fa-lock"></i> ส่วนจัดการสำหรับเจ้าหน้าที่</h6>
                         
                         <div class="mb-3">
-                            <label class="form-label font-sm">แนบรูปภาพใหม่ (ไม่บังคับ/ไม่เกิน 2MB)</label>
+                            <label class="form-label font-sm">แนบรูปภาพใหม่ (ไม่บังคับ)</label>
                             <input class="form-control form-control-sm" type="file" id="imageInput" accept="image/*">
                         </div>
                         
@@ -585,11 +585,6 @@
             if (fileInput.files.length > 0) {
                 const file = fileInput.files[0];
                 
-                if(file.size > 2 * 1024 * 1024) {
-                     Swal.fire('คำเตือน', 'ไฟล์มีขนาดใหญ่เกิน 2MB กรุณาลดขนาดไฟล์', 'warning');
-                     return;
-                }
-
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     payload.base64 = e.target.result.split(',')[1]; 
